@@ -7,10 +7,7 @@ import {
   Query,
   Param,
   Body,
-  Res,
-  HttpStatus,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { ProductsService } from './products.service';
 import { ProductListDto, CreateProductDto, UpdateProductDto } from './dto';
 
@@ -19,33 +16,33 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get('list')
-  async getProducts(@Query() query: ProductListDto, @Res() res: Response) {
+  async getProducts(@Query() query: ProductListDto) {
     try {
       const productList = await this.productsService.getAllProducts(query);
-      res.status(HttpStatus.OK).json(productList);
+      return productList;
     } catch (err) {
       throw new Error(err.message);
     }
   }
 
   @Get(':name')
-  async findProduct(@Param('name') name: string, @Res() res: Response) {
+  async findProduct(@Param('name') name: string) {
     try {
       const product = await this.productsService.getProductDetails(name);
-      res.status(HttpStatus.OK).json(product);
+      return product;
     } catch (err) {
       throw new Error(err.message);
     }
   }
 
   @Post('create')
-  async addProduct(@Body() body: CreateProductDto, @Res() res: Response) {
+  async addProduct(@Body() body: CreateProductDto) {
     try {
+      const response: any = {};
       const insertProduct = await this.productsService.createProduct(body);
-      res.status(HttpStatus.OK).json({
-        product: insertProduct,
-        message: 'Product created successfully',
-      });
+      response.product = insertProduct;
+      response.message = 'Product updated successfully';
+      return response;
     } catch (err) {
       throw new Error(err.message);
     }
@@ -55,25 +52,25 @@ export class ProductsController {
   async updateProduct(
     @Param('name') name: string,
     @Body() body: UpdateProductDto,
-    @Res() res: Response,
   ) {
     try {
+      const response: any = {};
       const product = await this.productsService.updateProduct(name, body);
-      res
-        .status(HttpStatus.OK)
-        .json({ product, message: 'Product updated successfully' });
+      response.product = product;
+      response.message = 'Product updated successfully';
+      return response;
     } catch (err) {
       throw new Error(err.message);
     }
   }
 
   @Delete(':name')
-  async deleteProduct(@Param('name') name: string, @Res() res: Response) {
+  async deleteProduct(@Param('name') name: string) {
     try {
+      const response: any = {};
       await this.productsService.deleteProduct(name);
-      res
-        .status(HttpStatus.OK)
-        .json({ message: 'Product deleted successfully' });
+      response.message = 'Product deleted successfully';
+      return response;
     } catch (err) {
       throw new Error(err.message);
     }
