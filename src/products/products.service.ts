@@ -1,66 +1,47 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { Products } from './products.model';
-import { Product } from './product.interface';
-import { ProductListDto, CreateProductDto, UpdateProductDto } from './dto';
-import { sortData } from '../utils';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+import Products from '../database/entities/products';
 
 @Injectable()
 export class ProductsService {
-  products: Products[] = [];
+  constructor(
+    @InjectRepository(Products)
+    private productsRepository: Repository<Products>,
+  ) {}
 
-  async getAllProducts(productEntities: ProductListDto): Promise<Products[]> {
-    const { name = '', sortBy = 'name', sortOrder = 'ASC' } = productEntities;
-    const products = this.products;
-    const sortProducts = await sortData({
-      itemList: products,
-      field: sortBy,
-      order: sortOrder,
-    });
-    const productList = sortProducts.filter((p: Product) => {
-      if (p.name.includes(name)) return p;
-    });
-    return productList;
+  async createProduct(product: CreateProductDto) {
+    const newProduct = await this.productsRepository.create(product);
+    await this.productsRepository.save(newProduct);
+    return newProduct;
   }
 
-  async getProductDetails(name: string): Promise<Product> {
-    const product = this.products.find((p: Product) => p.name === name);
+  async getAllProducts() {
+    return await this.productsRepository.find();
+  }
+
+  async getProduct(id: string) {
+    const product = await this.productsRepository.findOne(id);
     if (product) {
       return product;
     }
     throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
   }
 
-  async createProduct(product: CreateProductDto): Promise<Product[]> {
-    const { name, description, quantity, price } = product;
-    const newProduct = new Products(name, description, quantity, price);
-    await this.products.push(newProduct);
-    return this.products;
-  }
-
-  async updateProduct(name: string, data: UpdateProductDto): Promise<Product> {
-    const { description, price, quantity } = data;
-    const productIndex = this.products.findIndex(
-      (p: Product) => p.name === name,
-    );
-    if (productIndex !== -1) {
-      const product = this.products[productIndex];
-      product.description = description;
-      product.price = price;
-      product.quantity = quantity;
-      return product;
-    } else {
-      throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
+  async updateProduct(id: string, product: UpdateProductDto) {
+    await this.productsRepository.update(id, product);
+    const updatedProduct = await this.productsRepository.findOne(id);
+    if (updatedProduct) {
+      return updatedProduct;
     }
+    throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
   }
 
-  async deleteProduct(name: string): Promise<boolean> {
-    const productIndex = this.products.findIndex(
-      (p: Product) => p.name === name,
-    );
-    if (productIndex !== -1) {
-      delete this.products[productIndex];
-      return true;
-    } else {
+  async deleteProduct(id: string) {
+    const deleteResponse = await this.productsRepository.delete(id);
+    if (!deleteResponse.affected) {
       throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
     }
   }

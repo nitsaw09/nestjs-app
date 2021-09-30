@@ -1,1 +1,0 @@
-export { sortData } from './sortData';
