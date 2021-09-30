@@ -26,18 +26,8 @@ export class AuthService {
   }
 
   async userLogin(loginUser: LoginUserDto) {
-    const user: JwtPayload = await this.validateUser(loginUser);
+    const user = await this.usersService.getUserByEmail(loginUser.email);
 
-    // generate and sign token
-    const token = this.createToken(user);
-
-    return {
-      ...token,
-    };
-  }
-
-  async validateUser(loginUser: LoginUserDto) {
-    const user: any = await this.usersService.getUserByEmail(loginUser.email);
     const isPasswordMatching = await bcrypt.compare(
       loginUser.password,
       user.password,
@@ -49,6 +39,20 @@ export class AuthService {
       );
     }
     delete user.password;
+
+    // generate and sign token
+    const token = this.createToken(user);
+
+    return {
+      ...token,
+    };
+  }
+
+  async validateUser(loginUser: LoginUserDto) {
+    const user: any = await this.usersService.getUserByEmail(loginUser.email);
+    if (!user) {
+      throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED);
+    }
     return user;
   }
 
