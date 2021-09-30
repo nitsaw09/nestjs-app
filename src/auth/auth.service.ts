@@ -38,7 +38,6 @@ export class AuthService {
         HttpStatus.UNAUTHORIZED,
       );
     }
-    delete user.password;
 
     // generate and sign token
     const token = this.createToken(user);
