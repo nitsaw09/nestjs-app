@@ -1,4 +1,15 @@
-import { Column, Entity, PrimaryGeneratedColumn, Index } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  Index,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+import Categories from './categories';
 
 @Entity()
 class Products {
@@ -6,17 +17,26 @@ class Products {
   public id: string;
 
   @Index({ unique: true })
-  @Column()
+  @Column({ nullable: false })
   public name: string;
 
   @Column()
-  public description: string;
+  public category_id: string;
 
-  @Column()
-  public quantity: number;
+  @CreateDateColumn()
+  created_at: Date;
 
-  @Column()
-  public price: number;
+  @UpdateDateColumn()
+  updated_at: Date;
+
+  @DeleteDateColumn()
+  deleted_at: Date;
+
+  @ManyToOne((type) => Categories, (category) => category.products, {
+    eager: true,
+  })
+  @JoinColumn([{ name: 'category_id', referencedColumnName: 'id' }])
+  category: Categories;
 }
 
 export default Products;

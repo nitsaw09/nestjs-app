@@ -6,45 +6,44 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { GetProductFilterDto } from './dto/get-product-filter.dto';
 
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  @UseGuards(AuthGuard('jwt'))
   createProduct(@Body() createProductDto: CreateProductDto) {
     return this.productsService.createProduct(createProductDto);
   }
 
-  @Get()
+  @Get('list')
   getAllProducts() {
     return this.productsService.getAllProducts();
   }
 
-  @Get(':id')
-  getProduct(@Param('id') id: string) {
-    return this.productsService.getProduct(id);
+  @Get(':productId')
+  getProduct(@Param() getProductParams: GetProductFilterDto) {
+    const { productId } = getProductParams;
+    return this.productsService.getProduct(productId);
   }
 
-  @Patch(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @Patch(':productId')
   updateProduct(
-    @Param('id') id: string,
+    @Param() getProductParams: GetProductFilterDto,
     @Body() updateProductDto: UpdateProductDto,
   ) {
-    return this.productsService.updateProduct(id, updateProductDto);
+    const { productId } = getProductParams;
+    return this.productsService.updateProduct(productId, updateProductDto);
   }
 
-  @Delete(':id')
-  @UseGuards(AuthGuard('jwt'))
-  deleteProduct(@Param('id') id: string) {
-    return this.productsService.deleteProduct(id);
+  @Delete(':productId')
+  deleteProduct(@Param() getProductParams: GetProductFilterDto) {
+    const { productId } = getProductParams;
+    return this.productsService.deleteProduct(productId);
   }
 }

@@ -2,30 +2,23 @@ import {
   Column,
   Entity,
   PrimaryGeneratedColumn,
-  Index,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
   OneToMany,
 } from 'typeorm';
+import Products from './products';
 
 @Entity()
-class User {
+class Categories {
   @PrimaryGeneratedColumn('uuid')
   public id: string;
 
   @Column({ nullable: false })
   public name: string;
 
-  @Index({ unique: true })
-  @Column({ nullable: false })
-  public email: string;
-
-  @Column({
-    nullable: false,
-    select: false,
-  })
-  public password: string;
+  @OneToMany((type) => Products, (products) => products.category)
+  products: Products[];
 
   @CreateDateColumn()
   created_at: Date;
@@ -37,4 +30,4 @@ class User {
   deleted_at: Date;
 }
 
-export default User;
+export default Categories;

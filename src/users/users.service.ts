@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -22,38 +22,41 @@ export class UsersService {
     return await this.userRepository.find();
   }
 
-  async getUser(id: string) {
-    const post = await this.userRepository.findOne(id);
+  async getUser(userId: string) {
+    const post = await this.userRepository.findOne(userId);
     if (post) {
       return post;
     }
-    throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    throw new NotFoundException('User not found');
   }
 
-  async updateUser(id: string, user: UpdateUserDto) {
-    await this.userRepository.update(id, user);
-    const updatedUser = await this.userRepository.findOne(id);
+  async updateUser(userId: string, user: UpdateUserDto) {
+    await this.userRepository.update(userId, user);
+    const updatedUser = await this.userRepository.findOne(userId);
     if (updatedUser) {
       return updatedUser;
     }
-    throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    throw new NotFoundException('User not found');
   }
 
-  async deleteUser(id: string) {
-    const deleteResponse = await this.userRepository.delete(id);
+  async deleteUser(userId: string) {
+    const deleteResponse = await this.userRepository.softDelete({ id: userId });
     if (!deleteResponse.affected) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      throw new NotFoundException('User not found');
     }
+    return deleteResponse;
   }
 
   async getUserByEmail(email: string) {
-    const user = await this.userRepository.findOne({ email });
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password', 'password')
+      .where('user.email = :email', { email })
+      .getRawOne();
+
     if (user) {
       return user;
     }
-    throw new HttpException(
-      'User with this email does not exist',
-      HttpStatus.NOT_FOUND,
-    );
+    throw new NotFoundException('User with this email does not exist');
   }
 }
